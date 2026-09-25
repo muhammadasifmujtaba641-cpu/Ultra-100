@@ -1,0 +1,51 @@
+name: Build UltraGuardian EXE
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Is se aap GitHub par manual "Run workflow" button daba sakenge
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        architecture: 'x64'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        
+        # PyInstaller aur psutil ko zaroor install karna hai.
+        # (Psutil runtime par optional hai, lekin PyInstaller ko build ke waqt iski zaroorat hoti hai warna error aata hai)
+        pip install pyinstaller psutil
+        
+        # Agar requirements.txt file majood hai to us se bhi install kare
+        if (Test-Path requirements.txt) {
+            pip install -r requirements.txt
+        }
+      shell: pwsh
+
+    - name: Build EXE with PyInstaller
+      run: |
+        # --noconfirm: Agar purani file ho to bina pooche overwrite kar de
+        # --onefile: Sab kuch ek hi EXE mein pack kare
+        # --windowed: Console (kali screen) hide kare taake sirf GUI aye
+        pyinstaller --noconfirm --onefile --windowed --name "UltraGuardian" ultra_guardian_final.py
+      shell: pwsh
+
+    - name: Upload EXE Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: UltraGuardian-EXE
+        path: dist/UltraGuardian.exe
+        if-no-files-found: error # Agar EXE na bane to action fail ho jaye taake pata chal sake
