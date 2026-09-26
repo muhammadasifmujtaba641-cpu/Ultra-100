@@ -1,12 +1,20 @@
 # ultra_guardian_final.py
+import ctypes, sys
 import os
-import sys
 import time
 import subprocess
 import threading
 import queue
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, simpledialog
+from pathlib import Path
+
+try:
+    if not ctypes.windll.shell32.IsUserAnAdmin():
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit()
+except:
+    pass
 from pathlib import Path
 
 # Optional psutil for real memory map. If not installed, uses fake dict.
@@ -157,6 +165,8 @@ class UltraGuardianApp:
         # Start queue polling
         self.process_queues()
         self.log("=== UltraGuardian System Ready ===")
+        # Auto ON Cloud Shield hamesha ke liye
+        self.root.after(2000, self.run_cloud_shield)
 
     def log(self, msg):
         self.log_queue.put(msg)
